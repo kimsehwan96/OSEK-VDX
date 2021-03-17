@@ -1,0 +1,380 @@
+
+/***********************/
+/* Declaration Section */
+/***********************/
+
+VERSION {
+	KOIL = "2.2";
+	OSSEMANTICS = "ORTI", "2.2";
+};
+
+
+IMPLEMENTATION ETRI_ORTI {
+	OS {
+
+		ENUM [
+			"task1" = "&(task_table[0])",
+			"task2" = "&(task_table[1])",
+			"task3" = "&(task_table[2])"
+		]RUNNINGTASK, "Running Task Identification";	
+
+		ENUM "unsigned char" [
+			"11" = 0,
+			"10" = 1,
+			"7" = 2
+		]RUNNINGTASKPRIORITY, "Priority of Running Task";	
+		
+
+		TOTRACE ENUM "unsigned char" [
+			"ActivateTask"							= 1,
+			"TerminateTask"							= 2,
+			"ChainTask"									= 3,
+			"Schedule"									= 4,
+			"GetTaskID"									= 5,
+			"GetTaskState"							= 6,
+			"EnableAllInterrupts"				= 7,
+			"DisableAllInterrupts"			= 8,
+			"ResumeAllInterrupts"				= 9,
+			"SuspendAllInterrupts"			= 10,
+			"ResumeOSInterrupts"				= 11,
+			"SuspendOSInterrupts"				= 12,
+			"GetResource"								= 13,
+			"ReleaseResource"						= 14,
+			"SetEvent"									= 15,
+			"ClearEvent"								= 16,
+			"GetEvent"									= 17,
+			"WaitEvent"									= 18,
+			"GetAlarmBase"							= 19,
+			"GetAlarm"									= 20,
+			"SetRelAlarm"								= 21,
+			"SetAbsAlarm"								= 22,
+			"CancelAlarm"								= 23,
+			"GetActiveApplicationMode"	= 24,
+			"StartOS"										= 25,
+			"ShutdownOS"									= 26
+		]SERVICETRACE, "OS Services Watch";
+		/* OSServiceIdType in osek_os_types.h */	
+
+		ENUM "unsigned char" [
+			"E_OK" = 0,
+			"E_OS_ACCESS" = 1,
+			"E_OS_CALLEVEL" = 2,
+			"E_OS_ID" = 3,
+			"E_OS_LIMIT" = 4,
+			"E_OS_NOFUNC" = 5,
+			"E_OS_RESOURCE" = 6,
+			"E_OS_STATE" = 7,
+			"E_OS_VALUE" = 8,
+			"E_OS_SYS_STACK_OVERFLOW" = 16,
+			"E_OS_SYS_STACK_UNDERFLOW" = 17,
+			"E_OS_SYS_PARITY"  = 18,
+			"E_OS_SYS_MULTI_ACT" = 19,
+			"E_OS_INVALID_PRIORITY" = 20,
+			"E_OS_READY_Q_EMPTY" = 21,
+			"E_OS_READY_Q_FULL" = 22,
+			"E_OS_NO_TASK_IN_Q" = 23,
+			"E_OS_SYS_SERVICE" = 98,
+			"E_OS_UNKNOWN" = 99
+		]LASTERROR, "Last OSEK error";
+		/* osek_os_types.h */	
+
+		ENUM "unsigned char"[
+			"DEFAULT_APPMODE"	= 0,
+			"DIAGNIOSTIC_MODE"	=	1
+		]CURRENTAPPMODE, "Current application mode";	
+	}, "OS";
+
+	TASK {
+		ENUM "unsigned char" [
+			"11" = 0,
+			"10" = 1,
+			"7" = 2
+		]PRIORITY, "Actual Priority";
+
+		ENUM "unsigned char" [
+			"SUSPENDED"			       = 0x10,
+			"READY"                = 0x20,
+			"INITAIL_AND_READY"    = 0x21,
+			"AUTOSTART_AND_READY"  = 0x22,
+			"PREEMPTED_AND_READY"  = 0x24,
+			"WAITED_AND_READY"     = 0x28,               
+			"INTERRUPED_AND_READY" = 0x30,
+			"RUNNING"              = 0x40,
+			"WAITING"              = 0x80
+		]STATE, "Current State";
+		/* TaskStateType in osek_os_types.h */
+
+		ENUM "unsigned short *" [
+			"Stack0" : taskStack0 = "(task_table[0].tskc_static_desc->csc_stack->bottom_addr)",
+			"Stack1" : taskStack1 = "(task_table[1].tskc_static_desc->csc_stack->bottom_addr)",
+			"Stack2" : taskStack2 = "(task_table[2].tskc_static_desc->csc_stack->bottom_addr)"
+		]STACK, "Task Stack";
+			
+		CTYPE "unsigned char" REMAININGACTIVATIONS, "Remaining task activation";
+		
+		ENUM "unsigned short *" [
+			"Context 0" : Context_0 = 0,
+			"Context 1" : Context_1 = 1,
+			"Context 2" : Context_2 = 2
+		]CONTEXT, "Task Context";
+		
+		STRING vs_Home_Priority, "Home Priority";
+		STRING vs_Task_Type, "Task Type"; /* BASIC / EXTENDED */
+		STRING vs_Schedule, "Schedule";		/* non preemptive, full preemptive */
+		CTYPE "unsigned short" vs_Event_Mask, "Wait Mask";
+		CTYPE "unsigned short" vs_Event_Flags, "Event Flags";
+		STRING vs_max_Activations, "max. Activations";
+		
+		/******************************************/
+		/*	EVENT, RESOURCE RELATED ATTRS IN TASK	*/
+		/*	LJW                                   */
+		/******************************************/
+		
+		CTYPE EVMASKCURRENT, "Events received and to be processed #BITMASK64";
+			/* Qplus-Auto specific     */
+			/* Eg. "0x00404311" */
+		
+		CTYPE EVMASKWAITING, "Events Waited for #BITMASK64";
+			/* Qplus-Auto specific     */
+			/* Eg. "0x0001A002" */
+			
+		CTYPE RESCHAINLEN, "Length of Chain of Resource Held Currently";
+			/* Qplus-Auto specific     */
+			/* Eg. 5            */
+			
+			/* Qplus-Auto Specific     */
+			/* Eg. "RES_A"      */
+			
+		/**************************************************/
+		/*	End of EVENT, RESOURCE RELATED ATTRS IN TASK	*/
+		/*	LJW                                           */
+		/**************************************************/
+				
+	}, "Tasks";
+
+	STACK {
+		CTYPE SIZE, "Stack Size (Byte)";
+		CTYPE "unsigned short *" BASEADDRESS, "BaseAddress";
+		STRING STACKDIRECTION, "Stack Direction";
+		CTYPE "unsigned short" FILLPATTERN, "Stack Fill Pattern";
+	}, "Stacks";
+	
+	/***********************************/
+	/* Alarm & Resource & Event        */
+	/***********************************/
+	
+
+	ALARM {
+		CTYPE ALARMTIME, "Alarm Time";
+			/* ORTI 2.2 Part B std attr */
+		CTYPE CYCLETIME, "Cycle Time";
+			/* ORTI 2.2 Part B std attr */
+			
+		ENUM ["STOPPED" = 0, "RUNNING" = 1] STATE, "Alarm state";
+			/* ORTI 2.2 Part B std attr */
+			
+		STRING ACTION, "Action";
+			/* ORTI 2.2 Part B std attr */
+			
+		STRING COUNTER, "Counter";
+			/* ORTI 2.2 Part B std attr */
+		
+		CTYPE COUNTERPOS, "Counter Tick Position";
+			/* Qplus-Auto specific             */
+			/* Eg. 34                   */
+			
+		CTYPE COUNTERSUBPOS, "Counter Subtick Position";
+			/* Qplus-Auto specific             */
+			/* Eg. 34                   */ 
+			
+	}, "Alarms";
+
+
+	RESOURCE {
+
+		ENUM "unsigned char" [
+			"UNLOCKED" = 0,
+			"LOCKED" = 1
+		]STATE, "Resource State";
+			/* ORTI 2.2 Part B std attr  */
+			
+		ENUM "unsigned char" [
+			"Task task1" = 0,
+			"Task task2" = 1,
+			"Task task3" = 2
+		]LOCKER, "Resource Locker";
+			/* ORTI 2.2 Part B std attr */
+			
+		STRING PRIORITY, "Ceiling priority";
+			/* ORTI 2.2 Part B std attr */
+			/* (!) 만약 표시된 Pri가 현재의 Pri이면 구현이 어려움. */
+				
+	}, "Resources";
+
+
+	EVENT {
+		/* no standard attributes    */
+		
+		CTYPE "unsigned long long" MASK, "Mask Value #BITMASK64";
+		/* Qplus-Auto specific              */
+		/* Event Mask representation */
+		/* Eg. 0x00001000            */
+	}, "Events";
+	
+	/***********************************/
+	/* End of Alarm & Resource & Event */
+	/***********************************/
+	
+
+	CONTEXT {
+		CTYPE "unsigned long" _CPU_R0, "CPU register R0";
+		CTYPE "unsigned long" _CPU_R1, "CPU register R1";
+		CTYPE "unsigned long" _CPU_R2, "CPU register R2";
+		CTYPE "unsigned long" _CPU_R3, "CPU register R3";
+		CTYPE "unsigned long" _CPU_PC, "CPU register PC";
+		CTYPE "unsigned long" _CPU_SP, "CPU register SP";
+		CTYPE "unsigned char" VALID;
+	}, "Task Context";	
+
+	MESSAGECONTAINER {
+		STRING MSGNAME, "Message Name";
+		STRING MSGTYPE, "Message Type";
+		CTYPE QUEUESIZE, "Queue Size";
+		CTYPE QUEUECOUNT, "Entry Count";
+		CTYPE FIRSTELEMENT, "First Message";
+	}, "Message Container";
+
+	vs_ISR {
+		STRING vs_Priority, "Priority";
+	}, "ISRs";
+}; /* END OF IMPLEMENTATION */
+
+/***********************/
+/* Information Section */
+/***********************/
+
+OS VendorX_arch {
+	RUNNINGTASK = "kernel_cb.krn_running_exe_id"; 
+	RUNNINGTASKPRIORITY = "dynamic_common_cb[kernel_cb.krn_running_exe_id].cdc_curr_priority";
+	RUNNINGISR2 = ""; /*current unavailable */
+	SERVICETRACE = ""; /*current unavailable */
+	LASTERROR = ""; /*current unavailable */
+	CURRENTAPPMODE = "kernel_cb.krn_appmode";
+};
+
+TASK task1 {
+  PRIORITY = "(task_table[0].tskc_dynamic_desc->cdc_curr_priority)";
+  STATE = "(task_table[0].tskc_dynamic_desc->cdc_state)";
+  STACK = "(task_table[0].tskc_static_desc->csc_stack)";
+  REMAININGACTIVATIONS = "(task_table[0].tskc_curr_act_count)";
+  CONTEXT = "0";
+  vs_Home_Priority = "10";
+  vs_Task_Type = "BASIC";
+  vs_Schedule = "NON Preemptive";
+  vs_Event_Mask = "(task_table[0].tskc_set_event)";
+  vs_Event_Flags = "(task_table[0].tskc_own_event)";
+  vs_max_Activations = "1";
+  EVMASKCURRENT = "(task_table[0].tskc_set_event)";
+  EVMASKWAITING = "(task_table[0].tskc_wait_event)";
+  RESCHAINLEN = "(krt_tskres_cb_list[0].chain_size)";
+  TOPRES = "(krt_tskres_cb_list[0].chain_top)";
+};
+
+TASK task2 {
+  PRIORITY = "(task_table[1].tskc_dynamic_desc->cdc_curr_priority)";
+  STATE = "(task_table[1].tskc_dynamic_desc->cdc_state)";
+  STACK = "(task_table[1].tskc_static_desc->csc_stack)";
+  REMAININGACTIVATIONS = "(task_table[1].tskc_curr_act_count)";
+  CONTEXT = "1";
+  vs_Home_Priority = "7";
+  vs_Task_Type = "BASIC";
+  vs_Schedule = "NON Preemptive";
+  vs_Event_Mask = "(task_table[1].tskc_set_event)";
+  vs_Event_Flags = "(task_table[1].tskc_own_event)";
+  vs_max_Activations = "1";
+  EVMASKCURRENT = "(task_table[1].tskc_set_event)";
+  EVMASKWAITING = "(task_table[1].tskc_wait_event)";
+  RESCHAINLEN = "(krt_tskres_cb_list[1].chain_size)";
+  TOPRES = "(krt_tskres_cb_list[1].chain_top)";
+};
+
+TASK task3 {
+  PRIORITY = "(task_table[2].tskc_dynamic_desc->cdc_curr_priority)";
+  STATE = "(task_table[2].tskc_dynamic_desc->cdc_state)";
+  STACK = "(task_table[2].tskc_static_desc->csc_stack)";
+  REMAININGACTIVATIONS = "(task_table[2].tskc_curr_act_count)";
+  CONTEXT = "2";
+  vs_Home_Priority = "11";
+  vs_Task_Type = "BASIC";
+  vs_Schedule = "NON Preemptive";
+  vs_Event_Mask = "(task_table[2].tskc_set_event)";
+  vs_Event_Flags = "(task_table[2].tskc_own_event)";
+  vs_max_Activations = "1";
+  EVMASKCURRENT = "(task_table[2].tskc_set_event)";
+  EVMASKWAITING = "(task_table[2].tskc_wait_event)";
+  RESCHAINLEN = "(krt_tskres_cb_list[2].chain_size)";
+  TOPRES = "(krt_tskres_cb_list[2].chain_top)";
+};
+
+
+STACK taskStack0 {
+  SIZE="256";
+  STACKDIRECTION = "UPWARD";
+  BASEADDRESS = "(task_table[0].tskc_static_desc->csc_stack->bottom_addr)";
+  FILLPATTERN = "0xAA55";
+};
+
+STACK taskStack1 {
+  SIZE="256";
+  STACKDIRECTION = "UPWARD";
+  BASEADDRESS = "(task_table[1].tskc_static_desc->csc_stack->bottom_addr)";
+  FILLPATTERN = "0xAA55";
+};
+
+STACK taskStack2 {
+  SIZE="256";
+  STACKDIRECTION = "UPWARD";
+  BASEADDRESS = "(task_table[2].tskc_static_desc->csc_stack->bottom_addr)";
+  FILLPATTERN = "0xAA55";
+};
+
+
+
+
+
+
+
+
+CONTEXT Context_0 {
+	_CPU_R0 = "((unsigned long *) (task_table[0].tskc_static_desc->csc_context->ccr))";	
+	_CPU_R1 = "((unsigned long *) (task_table[0].tskc_static_desc->csc_context->d))";
+	_CPU_R2 = "((unsigned long *) (task_table[0].tskc_static_desc->csc_context->x))";
+	_CPU_R3 = "((unsigned long *) (task_table[0].tskc_static_desc->csc_context->y))";
+	_CPU_PC = "((unsigned long *) (task_table[0].tskc_static_desc->csc_context->pc))";
+	_CPU_SR = "((unsigned long *) (task_table[0].tskc_static_desc->csc_context->sp))";
+	VALID = "(task_table[0].tskc_static_desc->csc_state != 0x10) && (task_table[0].tskc_static_desc->csc_state != 0x40)";
+};
+
+CONTEXT Context_1 {
+	_CPU_R0 = "((unsigned long *) (task_table[1].tskc_static_desc->csc_context->ccr))";	
+	_CPU_R1 = "((unsigned long *) (task_table[1].tskc_static_desc->csc_context->d))";
+	_CPU_R2 = "((unsigned long *) (task_table[1].tskc_static_desc->csc_context->x))";
+	_CPU_R3 = "((unsigned long *) (task_table[1].tskc_static_desc->csc_context->y))";
+	_CPU_PC = "((unsigned long *) (task_table[1].tskc_static_desc->csc_context->pc))";
+	_CPU_SR = "((unsigned long *) (task_table[1].tskc_static_desc->csc_context->sp))";
+	VALID = "(task_table[1].tskc_static_desc->csc_state != 0x10) && (task_table[1].tskc_static_desc->csc_state != 0x40)";
+};
+
+CONTEXT Context_2 {
+	_CPU_R0 = "((unsigned long *) (task_table[2].tskc_static_desc->csc_context->ccr))";	
+	_CPU_R1 = "((unsigned long *) (task_table[2].tskc_static_desc->csc_context->d))";
+	_CPU_R2 = "((unsigned long *) (task_table[2].tskc_static_desc->csc_context->x))";
+	_CPU_R3 = "((unsigned long *) (task_table[2].tskc_static_desc->csc_context->y))";
+	_CPU_PC = "((unsigned long *) (task_table[2].tskc_static_desc->csc_context->pc))";
+	_CPU_SR = "((unsigned long *) (task_table[2].tskc_static_desc->csc_context->sp))";
+	VALID = "(task_table[2].tskc_static_desc->csc_state != 0x10) && (task_table[2].tskc_static_desc->csc_state != 0x40)";
+};
+
+
+
+
