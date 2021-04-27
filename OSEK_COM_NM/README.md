@@ -143,5 +143,17 @@ Indirect NM 에서의 카운터를 의미.
 (기존 소프트웨어 개발에서 사용하는 time-out, retry_count 등과 비슷한 개념들임.)
 
 
+## Time-out of Indirect NM
 
+![](8.png)
+
+- Time out이 발생하면 Counter 값이 증가, 
+
+- 메시지가 제대로 수신되면 counter 감소.
+
+- Counter 값이 Threshold 값에 도달하게 되면 `Static Absent` 상태라고 판단하게 됨
+
+- Time-out 이 발생할 때 마다 Absent, 메시지를 수신 받았을 때는 Present (state)
+
+- Counter 값이 Threshold 값에 도달 할 때만 `Static Absent`로 판단 하는 것이 Extended State.
 
